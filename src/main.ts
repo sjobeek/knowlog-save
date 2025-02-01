@@ -615,11 +615,14 @@ export default class RemotelySavePlugin extends Plugin {
     this.registerObsidianProtocolHandler(
       COMMAND_CALLBACK_DROPBOX,
       async (inputParams) => {
+        console.debug("Dropbox callback received with params:", inputParams);
         if (
           inputParams.code !== undefined &&
           this.oauth2Info?.verifier !== undefined
         ) {
+          console.debug("Verifier present:", !!this.oauth2Info.verifier);
           if (this.oauth2Info.helperModal !== undefined) {
+            console.debug("Helper modal found, updating content");
             const k = this.oauth2Info.helperModal.contentEl;
             k.empty();
 
@@ -631,65 +634,94 @@ export default class RemotelySavePlugin extends Plugin {
                 });
               });
           } else {
+            console.debug("No helper modal found!");
             new Notice(t("protocol_dropbox_no_modal"));
             return;
           }
 
-          const authRes = await sendAuthReqDropbox(
-            this.settings.dropbox.clientID,
-            this.oauth2Info.verifier,
-            inputParams.code,
-            async (e: any) => {
-              new Notice(t("protocol_dropbox_connect_fail"));
-              new Notice(`${e}`);
-              throw e;
+          try {
+            console.debug("Sending auth request to Dropbox...");
+            const authRes = await sendAuthReqDropbox(
+              this.settings.dropbox.clientID,
+              this.oauth2Info.verifier,
+              inputParams.code,
+              async (e: any) => {
+                console.error("Dropbox auth request failed:", e);
+                new Notice(t("protocol_dropbox_connect_fail"));
+                new Notice(`${e}`);
+                throw e;
+              }
+            );
+
+            console.debug("Auth request successful, updating settings");
+            const self = this;
+            setConfigBySuccessfullAuthInplaceDropbox(
+              this.settings.dropbox,
+              authRes!,
+              () => self.saveSettings()
+            );
+
+            const client = getClient(
+              this.settings,
+              this.app.vault.getName(),
+              () => self.saveSettings()
+            );
+            const username = await client.getUserDisplayName();
+            this.settings.dropbox.username = username;
+            await this.saveSettings();
+
+            console.debug("Settings updated, showing success notice");
+            new Notice(
+              t("protocol_dropbox_connect_succ", {
+                username: username,
+              })
+            );
+
+            console.debug("Cleaning up OAuth info");
+            this.oauth2Info.verifier = ""; // reset it
+            if (this.oauth2Info.helperModal) {
+              console.debug("Closing helper modal");
+              this.oauth2Info.helperModal.close(); // close it
+              this.oauth2Info.helperModal = undefined;
             }
-          );
 
-          const self = this;
-          setConfigBySuccessfullAuthInplaceDropbox(
-            this.settings.dropbox,
-            authRes!,
-            () => self.saveSettings()
-          );
+            if (this.oauth2Info.authDiv) {
+              console.debug("Updating auth div visibility");
+              this.oauth2Info.authDiv.toggleClass(
+                "dropbox-auth-button-hide",
+                this.settings.dropbox.username !== ""
+              );
+              this.oauth2Info.authDiv = undefined;
+            }
 
-          const client = getClient(
-            this.settings,
-            this.app.vault.getName(),
-            () => self.saveSettings()
-          );
-          const username = await client.getUserDisplayName();
-          this.settings.dropbox.username = username;
-          await this.saveSettings();
+            if (this.oauth2Info.revokeAuthSetting) {
+              console.debug("Updating revoke auth setting");
+              this.oauth2Info.revokeAuthSetting.setDesc(
+                t("protocol_dropbox_connect_succ_revoke", {
+                  username: this.settings.dropbox.username,
+                })
+              );
+              this.oauth2Info.revokeAuthSetting = undefined;
+            }
 
-          new Notice(
-            t("protocol_dropbox_connect_succ", {
-              username: username,
-            })
-          );
-
-          this.oauth2Info.verifier = ""; // reset it
-          this.oauth2Info.helperModal?.close(); // close it
-          this.oauth2Info.helperModal = undefined;
-
-          this.oauth2Info.authDiv?.toggleClass(
-            "dropbox-auth-button-hide",
-            this.settings.dropbox.username !== ""
-          );
-          this.oauth2Info.authDiv = undefined;
-
-          this.oauth2Info.revokeAuthSetting?.setDesc(
-            t("protocol_dropbox_connect_succ_revoke", {
-              username: this.settings.dropbox.username,
-            })
-          );
-          this.oauth2Info.revokeAuthSetting = undefined;
-          this.oauth2Info.revokeDiv?.toggleClass(
-            "dropbox-revoke-auth-button-hide",
-            this.settings.dropbox.username === ""
-          );
-          this.oauth2Info.revokeDiv = undefined;
+            if (this.oauth2Info.revokeDiv) {
+              console.debug("Updating revoke div visibility");
+              this.oauth2Info.revokeDiv.toggleClass(
+                "dropbox-revoke-auth-button-hide",
+                this.settings.dropbox.username === ""
+              );
+              this.oauth2Info.revokeDiv = undefined;
+            }
+          } catch (error) {
+            console.error("Error during Dropbox auth flow:", error);
+            if (this.oauth2Info.helperModal) {
+              this.oauth2Info.helperModal.close();
+              this.oauth2Info.helperModal = undefined;
+            }
+            throw error;
+          }
         } else {
+          console.error("Invalid callback params or missing verifier:", inputParams);
           new Notice(t("protocol_dropbox_connect_fail"));
           throw Error(
             t("protocol_dropbox_connect_unknown", {
