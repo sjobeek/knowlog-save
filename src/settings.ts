@@ -393,6 +393,10 @@ class DropboxAuthModal extends Modal {
   async onOpen() {
     const { contentEl } = this;
 
+    // Set service type to Dropbox at the start of auth flow
+    this.plugin.settings.serviceType = "dropbox";
+    await this.plugin.saveSettings();
+
     const t = (x: TransItemType, vars?: any) => {
       return this.plugin.i18n.t(x, vars);
     };
@@ -997,8 +1001,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
 
           dropdown
             .setValue(
-              `${
-                this.plugin.settings.s3.bypassCorsLocally ? "enable" : "disable"
+              `${this.plugin.settings.s3.bypassCorsLocally ? "enable" : "disable"
               }`
             )
             .onChange(async (value) => {
@@ -1106,10 +1109,9 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
 
         dropdown
           .setValue(
-            `${
-              this.plugin.settings.s3.generateFolderObject
-                ? "generate"
-                : "notgenerate"
+            `${this.plugin.settings.s3.generateFolderObject
+              ? "generate"
+              : "notgenerate"
             }`
           )
           .onChange(async (val) => {
@@ -2541,10 +2543,9 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
 
           dropdown
             .setValue(
-              `${
-                this.plugin.settings.enableMobileStatusBar
-                  ? "enable"
-                  : "disable"
+              `${this.plugin.settings.enableMobileStatusBar
+                ? "enable"
+                : "disable"
               }`
             )
             .onChange(async (val) => {
@@ -2811,8 +2812,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
 
         dropdown
           .setValue(
-            `${
-              this.plugin.settings.obfuscateSettingFile ? "enable" : "disable"
+            `${this.plugin.settings.obfuscateSettingFile ? "enable" : "disable"
             }`
           )
           .onChange(async (val) => {

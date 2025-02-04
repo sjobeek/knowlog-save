@@ -175,8 +175,7 @@ async function retryReq<T>(
     try {
       if (idx !== 0) {
         console.warn(
-          `${extraHint === "" ? "" : extraHint + ": "}The ${
-            idx + 1
+          `${extraHint === "" ? "" : extraHint + ": "}The ${idx + 1
           }-th try starts at time ${Date.now()}`
         );
       }
@@ -195,10 +194,8 @@ async function retryReq<T>(
       if (idx === waitSeconds.length - 1) {
         // the last retry also failed, give up
         throw new Error(
-          `${
-            extraHint === "" ? "" : extraHint + ": "
-          }"429 too many requests", after retrying for ${
-            idx + 1
+          `${extraHint === "" ? "" : extraHint + ": "
+          }"429 too many requests", after retrying for ${idx + 1
           } times still failed.`
         );
       }
@@ -212,10 +209,8 @@ async function retryReq<T>(
       const secMin = Math.max(svrSec, fallbackSec);
       const secMax = Math.max(secMin * 1.8, 2);
       console.warn(
-        `${
-          extraHint === "" ? "" : extraHint + ": "
-        }We have "429 too many requests" error of ${
-          idx + 1
+        `${extraHint === "" ? "" : extraHint + ": "
+        }We have "429 too many requests" error of ${idx + 1
         }-th try, at time ${Date.now()}, and wait for ${secMin} ~ ${secMax} seconds to retry. Original info: ${JSON.stringify(
           err.error,
           null,
@@ -278,6 +273,7 @@ export const sendAuthReq = async (
   errorCallBack: any
 ) => {
   try {
+    console.debug('Sending Dropbox auth request with:', { appKey, verifier, authCode });
     const resp1 = await fetch("https://api.dropboxapi.com/oauth2/token", {
       method: "POST",
       body: new URLSearchParams({
@@ -288,10 +284,12 @@ export const sendAuthReq = async (
         redirect_uri: `obsidian://${COMMAND_CALLBACK_DROPBOX}`,
       }),
     });
+    console.debug('Dropbox auth response status:', resp1.status);
     const resp2 = (await resp1.json()) as DropboxSuccessAuthRes;
+    console.debug('Dropbox auth response:', resp2);
     return resp2;
   } catch (e) {
-    console.error(e);
+    console.error('Error in Dropbox auth:', e);
     if (errorCallBack !== undefined) {
       await errorCallBack(e);
     }

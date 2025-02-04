@@ -1,11 +1,11 @@
 {
-  "id": "remotely-save",
-  "name": "Remotely Save",
-  "version": "0.5.25",
+  "id": "knowlog-save",
+  "name": "Knowlog Save",
+  "version": "0.0.1",
   "minAppVersion": "0.13.21",
-  "description": "Yet another unofficial plugin allowing users to synchronize notes between local device and the cloud service.",
-  "author": "fyears",
-  "authorUrl": "https://github.com/fyears",
+  "description": "Parent app for viewing Knowlog data.",
+  "author": "sjobeek",
+  "authorUrl": "https://github.com/sjobeek",
   "isDesktopOnly": false,
-  "fundingUrl": "https://remotelysave.com"
+  "fundingUrl": "https://knowlogapp.com"
 }

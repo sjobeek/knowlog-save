@@ -8,10 +8,10 @@ const DEFAULT_README_FOR_METADATAONREMOTE =
 const DEFAULT_VERSION_FOR_METADATAONREMOTE = "20220220";
 
 export const DEFAULT_FILE_NAME_FOR_METADATAONREMOTE =
-  "_remotely-save-metadata-on-remote.json";
+  "_knowlog-save-metadata-on-remote.json";
 
 export const DEFAULT_FILE_NAME_FOR_METADATAONREMOTE2 =
-  "_remotely-save-metadata-on-remote.bin";
+  "_knowlog-save-metadata-on-remote.bin";
 
 export interface DeletionOnRemote {
   key: string;
